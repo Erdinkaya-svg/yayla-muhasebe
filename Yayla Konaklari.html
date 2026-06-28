@@ -5043,7 +5043,7 @@ function GolgeYapMuhasebe() {
       const tah = c.hareketler.filter(h => h.tutar < 0).reduce((t, h) => t + Math.abs(h.tutar), 0);
       const kalan = borc - tah;
       return `${c.ad} (${kapiLabel(c)}): ${kalan.toLocaleString("tr-TR")} TL`;
-    }).join("%0A");
+    }).join("\n");
     const konu = encodeURIComponent(`Yayla Konakları Borç Raporu — ${tarih}`);
     const govde = encodeURIComponent(`Yayla Konakları Muhasebe — ${tarih}%0A` + `Toplam Borç: ${toplamBorc.toLocaleString("tr-TR")} TL%0A` + `Tahsilat: ${toplamTahsilat.toLocaleString("tr-TR")} TL%0A` + `Kalan: ${borcluToplam.toLocaleString("tr-TR")} TL%0A%0A` + `BORÇLULAR:%0A`) + satirlar;
     // <a> tag ile aç - Safari'de çalışır
