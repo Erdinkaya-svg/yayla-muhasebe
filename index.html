@@ -1729,6 +1729,39 @@ function GolgeYapMuhasebe() {
     });
   }, []);
 
+  // ── Sekme arka plana geçerse / kapanırsa bekleyen buluta yazma işlemini HEMEN tamamla ──
+  // (800ms'lik gecikme sırasında kullanıcı ekran görüntüsü alır, uygulama değiştirir ya da
+  //  ekranı kilitlerse Safari bu bekleyen zamanlayıcıyı bazen hiç çalıştırmadan iptal edebiliyor.
+  //  Bu değişikliklerin sessizce kaybolmasına sebep oluyordu; artık anında zorluyoruz.)
+  useEffect(() => {
+    function hemenYaz() {
+      if (yazmaZamanlayiciRef.current) {
+        clearTimeout(yazmaZamanlayiciRef.current);
+        yazmaZamanlayiciRef.current = null;
+        if (FB_AKTIF && FB_DOC_REF && sonJsonRef.current) {
+          FB_DOC_REF.set({
+            payload: sonJsonRef.current,
+            guncelleyen: (fbAuth.currentUser && fbAuth.currentUser.email) || "bilinmiyor",
+            guncellemeZamani: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => setBulutDurum("bağlı")).catch(e => { console.warn("Bulut kaydı hatası:", e); setBulutDurum("hata"); });
+        }
+      }
+      if (otoJsonZamanlayiciRef.current) {
+        clearTimeout(otoJsonZamanlayiciRef.current);
+        otoJsonZamanlayiciRef.current = null;
+        if (otoHandleRef.current && sonJsonRef.current) otoJsonYaz(sonJsonRef.current);
+      }
+    }
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") hemenYaz(); });
+    window.addEventListener("pagehide", hemenYaz);
+    window.addEventListener("blur", hemenYaz);
+    return () => {
+      document.removeEventListener("visibilitychange", hemenYaz);
+      window.removeEventListener("pagehide", hemenYaz);
+      window.removeEventListener("blur", hemenYaz);
+    };
+  }, []);
+
   // ── Buluttan canlı güncelleme dinle ──
   useEffect(() => {
     if (!FB_AKTIF || !FB_DOC_REF) return;
