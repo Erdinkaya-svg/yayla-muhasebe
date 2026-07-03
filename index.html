@@ -1780,7 +1780,19 @@ function GolgeYapMuhasebe() {
             sonJsonRef.current = data.payload;
             const birlesik = stateGuncelBilgilerleBirlestir(parsed);
             LS.set("golge_yap_state", JSON.stringify(birlesik));
-            setState(birlesik);
+            setState(prev => {
+              const eskiIdler = new Set((prev.bildirimler || []).map(b => b.id));
+              const yeniler = (birlesik.bildirimler || []).filter(b => !eskiIdler.has(b.id));
+              if (yeniler.length > 0) {
+                yeniler.slice(0, 3).reverse().forEach((b, i) => {
+                  setTimeout(() => {
+                    setBildirim({ msg: "📥 " + b.tip, tip: "ok" });
+                    setTimeout(() => setBildirim(null), 2500);
+                  }, i * 3000);
+                });
+              }
+              return birlesik;
+            });
           } catch (e) { console.warn("Bulut verisi okunamadı:", e); }
         }
       }
